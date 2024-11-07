@@ -1,0 +1,17 @@
+{
+  "device_type": "android",
+  "android": {
+    "platformName": "Android",
+    "automationName": "UiAutomator2",
+    "deviceName": "Android Device",
+    "autoGrantPermissions": true,
+    "noReset": true
+  },
+  "ios": {
+    "platformName": "iOS",
+    "automationName": "XCUITest",
+    "deviceName": "iPhone",
+    "autoAcceptAlerts": true,
+    "noReset": true
+  }
+}

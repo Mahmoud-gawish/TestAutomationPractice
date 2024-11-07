@@ -1,0 +1,14 @@
+{
+  "login_button": {
+    "android_locator": {"type": "id", "value": "com.example.android:id/login_button"},
+    "ios_locator": {"type": "accessibility_id", "value": "loginButton"}
+  },
+  "username_field": {
+    "android_locator": {"type": "xpath", "value": "//android.widget.EditText[@content-desc='username']"},
+    "ios_locator": {"type": "accessibility_id", "value": "usernameField"}
+  },
+  "password_field": {
+    "android_locator": {"type": "xpath", "value": "//android.widget.EditText[@content-desc='password']"},
+    "ios_locator": {"type": "accessibility_id", "value": "passwordField"}
+  }
+}

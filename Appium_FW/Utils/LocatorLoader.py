@@ -3,14 +3,19 @@ from typing import Dict, Optional
 
 
 class LocatorLoader:
-    def __init__(self, locator_file: str = 'locators.json', config_file: str = 'config.json'):
-        self.locator_file = locator_file
-        self.config_file = config_file
+    def __init__(self, page: str):
+        """
+        Initialize the LocatorLoader with the specific page's locator JSON file and a single config file for device type.
+
+        :param page: The name of the page (e.g., "login" or "home"), which corresponds to the locator file (e.g., "login_locators.json").
+        """
+        self.locator_file = f"{page}_locators.json"  # Page-specific locator file
+        self.config_file = 'config.json'  # Single config file for device type
         self.locators = self._load_locators()
         self.device_type = self._load_device_type()
 
     def _load_locators(self) -> Dict[str, Dict[str, Dict[str, str]]]:
-        """Load locators from the JSON file and return as a dictionary."""
+        """Load locators from the page-specific JSON file and return as a dictionary."""
         try:
             with open(self.locator_file, 'r') as file:
                 return json.load(file)
@@ -52,8 +57,7 @@ class LocatorLoader:
 
 # Example usage
 if __name__ == "__main__":
-    loader = LocatorLoader(locator_file='locators.json', config_file='config.json')
-
-    # Retrieve locator based on the config file's device type
+    # Initialize for a specific page
+    loader = LocatorLoader(page='login')
     locator = loader.get_locator("login_button")
     print(f"Locator for login_button on {loader.device_type}: {locator}")

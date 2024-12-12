@@ -1,39 +1,41 @@
+from appium import webdriver
 import xml.etree.ElementTree as ET
 import json
 import os
+from appium.webdriver.webdriver import WebDriver as AppiumWebDriver
+
+from appium.options.android import UiAutomator2Options
 
 
 class ScreenElementExtractor:
-    def __init__(self, screen_source: str = None, xml_file: str = None, output_file: str = "elements.json"):
+    def __init__(self, driver: webdriver.Remote, output_file: str = "elements.json",
+                 page_source_file: str = "page_source.xml"):
         """
         Initialize the extractor.
 
-        :param screen_source: XML source as a string.
-        :param xml_file: Path to an XML file containing the screen source.
+        :param driver: Appium WebDriver instance.
         :param output_file: Path to the output JSON file.
+        :param page_source_file: Path to save the page source XML file.
         """
-        self.screen_source = screen_source
-        self.xml_file = xml_file
+        self.driver = driver
         self.output_file = output_file
+        self.page_source_file = page_source_file
         self.elements = {}
 
-        if not self.screen_source and not self.xml_file:
-            raise ValueError("Either 'screen_source' or 'xml_file' must be provided.")
-        if self.xml_file and not os.path.exists(self.xml_file):
-            raise FileNotFoundError(f"The file {self.xml_file} does not exist.")
-
-    def _load_screen_source_from_file(self):
-        """Load the screen source XML from a file."""
-        with open(self.xml_file, "r", encoding="utf-8") as file:
-            self.screen_source = file.read()
+    def save_page_source(self):
+        """Fetch and save the current page source to an XML file."""
+        page_source = self.driver.page_source
+        with open(self.page_source_file, "w", encoding="utf-8") as file:
+            file.write(page_source)
 
     def parse_screen_source(self):
-        """Parse the screen source XML and extract elements."""
-        if self.xml_file and not self.screen_source:
-            self._load_screen_source_from_file()
+        """Parse the saved page source XML and extract elements."""
+        if not os.path.exists(self.page_source_file):
+            raise FileNotFoundError(
+                f"The file {self.page_source_file} does not exist. Please fetch the page source first.")
 
         try:
-            tree = ET.ElementTree(ET.fromstring(self.screen_source))
+            tree = ET.parse(self.page_source_file)
             root = tree.getroot()
             self._extract_elements(root)
         except ET.ParseError as e:
@@ -43,10 +45,10 @@ class ScreenElementExtractor:
         """Recursive method to extract element locators."""
         # Determine the element name
         element_name = (
-            node.attrib.get("text", "").strip()
-            or node.attrib.get("content-desc", "").strip()
-            or node.attrib.get("resource-id", "").strip()
-            or f"Unnamed_{node.tag}"
+                node.attrib.get("text", "").strip()
+                or node.attrib.get("content-desc", "").strip()
+                or node.attrib.get("resource-id", "").strip()
+                or f"Unnamed_{node.tag}"
         )
 
         # Determine the locator strategy
@@ -75,28 +77,32 @@ class ScreenElementExtractor:
             json.dump(self.elements, file, indent=4, ensure_ascii=False)
 
     def extract(self):
-        """Main method to parse the source and save results."""
+        """Main method to fetch the page source, parse it, and save results."""
+        self.save_page_source()
         self.parse_screen_source()
         self.save_to_json()
 
 
 # Example Usage
 if __name__ == "__main__":
-    # Option 1: Provide XML as a string
-    # screen_source = """
-    # <hierarchy>
-    #     <node text="Submit" resource-id="com.example:id/button1" content-desc="SubmitButton" class="android.widget.Button" />
-    #     <node class="android.widget.TextView" />
-    #     <node text="Enter your name" resource-id="com.example:id/inputField" class="android.widget.EditText" />
-    # </hierarchy>
-    # """
-    # extractor = ScreenElementExtractor(screen_source=screen_source, output_file="output.json")
-    # extractor.extract()
-    # print(f"Elements saved to {extractor.output_file}")
+    # Appium Driver Setup (Modify capabilities as needed)
 
-    # Option 2: Provide an XML file path
-    # Make sure 'screen_source.xml' exists in the same directory
-    xml_file_path = "/Users/mahmoudgawish/PycharmProjects/TestAutomationPractice/Appium_FW/Utils/screen_source.xml"
-    extractor = ScreenElementExtractor(xml_file=xml_file_path, output_file="output_from_file.json")
-    extractor.extract()
-    print(f"Elements saved to {extractor.output_file}")
+    options = UiAutomator2Options()
+    options.set_capability("platformName", "Android")
+    options.set_capability("automationName", "UIAutomator2")
+    options.set_capability("appPackage", "com.swaglabsmobileapp")
+    options.set_capability("appActivity", "com.swaglabsmobileapp.MainActivity")
+    options.set_capability("udid", "RFCX11506GH")
+    options.set_capability("noReset", True)
+
+    # Initialize the driver with Appium's WebDriver
+    driver = AppiumWebDriver("http://127.0.0.1:4723", options=options)
+
+    try:
+        # Initialize the extractor and generate elements
+        extractor = ScreenElementExtractor(driver, output_file="elements.json", page_source_file="page_source.xml")
+        extractor.extract()
+        print(f"Elements saved to {extractor.output_file}")
+    finally:
+        # Quit the Appium session
+        driver.quit()

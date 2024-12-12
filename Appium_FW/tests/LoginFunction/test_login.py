@@ -3,6 +3,7 @@ from Appium_FW.pages import login_page # Import the LoginPage class
 from Appium_FW.Utils.TestDataLoader import TestDataLoader  # Import the TestDataLoader class
 from Appium_FW.Utils.DriverManager import DriverManager  # Import the DriverManager for driver initialization
 from Appium_FW.pages.LoginPage.login_page import LoginPage
+import pytest
 
 
 class LoginTest:
